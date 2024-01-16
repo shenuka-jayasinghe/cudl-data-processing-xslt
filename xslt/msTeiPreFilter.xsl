@@ -14,6 +14,7 @@
    
    <xsl:param name="dest_dir" as="xsd:string*" required="yes" /><!-- Point to the output directory -->
    <xsl:param name="data_dir" as="xsd:string*" required="no" />
+   <xsl:param name="deps_dir" as="xsd:string*" required="no"/>
    <xsl:param name="collection_xml_dir" as="xsd:string*" />
    
    <xsl:param name="path_to_buildfile" as="xsd:string*" required="no"/>
@@ -21,6 +22,7 @@
    <xsl:variable name="clean_dest_dir" select="cudl:path-to-directory($dest_dir, $path_to_buildfile)"/>
    <xsl:variable name="clean_data_dir" select="cudl:path-to-directory($data_dir, $path_to_buildfile)"/>
    <xsl:variable name="clean_collection_xml_dir" select="cudl:path-to-directory($collection_xml_dir, $path_to_buildfile)"/>
+   <xsl:variable name="clean_deps_dir" select="cudl:path-to-directory($deps_dir, $path_to_buildfile)"/>
    
    <!--<xsl:variable name="pathToConf" select="'../../../conf/local.conf'"/>
    <xsl:variable name="conf_file" select="document($pathToConf)"/>
@@ -28,9 +30,15 @@
    <xsl:variable name="apiKey" select="$conf_file)//services/@key"/>-->
 
    <xsl:variable name="fileID" select="substring-before(tokenize(document-uri(/), '/')[last()], '.xml')"/>
+   <xsl:variable name="deps_texts" as="document-node()*">
+      <xsl:try select="document(concat($clean_deps_dir,'/',$fileID,'/texts.xml'))">
+         <xsl:catch/>
+      </xsl:try>
+   </xsl:variable>
    
    <xsl:key name="surfaceIDs" match="//tei:surface" use="(@xml:id, concat('#',@xml:id))"/>
    <xsl:key name="surfaceNs" match="//tei:surface" use="normalize-space(@n)"/>
+   <xsl:key name="page_file_avail" match="//*:surface" use="normalize-space(@nid)"/>
    <xsl:key name="pbNs" match="//tei:pb[normalize-space(@n)]" use="@n"/>
    
    <xsl:template match="/">
@@ -2602,6 +2610,9 @@
       <xsl:param name="type" as="xsd:string*"/>
       <xsl:param name="html_dir"/>
       
+      <xsl:variable name="type_attr" select="$type" as="xsd:string*"/>
+      <xsl:variable name="target_id" select="$current_pb/replace(normalize-space(@facs), '^#', '')"/>
+      <xsl:variable name="page_has_text" select="not(empty((key('page_file_avail', $target_id, $deps_texts/*)[@type = $type_attr])[1]))" as="xsd:boolean"/>
       
       <xsl:variable name="filename" select="lambda:construct-output-filename-path($current_pb, 'filename', $type)"/>
       <xsl:variable name="html_file" select="concat(string-join(($html_dir, $filename),'/'), '.html')"/>
@@ -2610,10 +2621,15 @@
          <xsl:apply-templates select="key('surfaceIDs', $current_pb/@facs)" mode="count"/>
       </xsl:variable>
       
+      <!--<xsl:if test="not(unparsed-text-available($html_file) = $page_has_text)">
+         <xsl:message select="string-join(('BUBBA',$type_attr,$target_id, unparsed-text-available($html_file), $page_has_text, exists($deps_texts//tei:surface[@nid = $target_id])), ':')">
+            
+         </xsl:message>
+      </xsl:if>-->
       <!-- Do not ouput if pb[position() gt 1][ancestor::div[@decls='#unpaginated']] -->
       <!-- not($current_pb is (tei:div[@decls='unpaginated']//tei:pb)[position() gt 1]) -->
       
-      <xsl:if test="unparsed-text-available($html_file)">
+      <xsl:if test="$page_has_text">
          <map key="{$type}_content" xmlns="http://www.w3.org/2005/xpath-functions">
             <string key="filename" xmlns="http://www.w3.org/2005/xpath-functions">
                <xsl:value-of select="replace(tokenize($html_file,'/')[last()],'\.html$','')"/>
@@ -2625,7 +2641,16 @@
                <xsl:value-of select="concat('i',$surface_number)"/>
             </string>
             <string key="text" xmlns="http://www.w3.org/2005/xpath-functions">
-               <xsl:value-of select="unparsed-text($html_file)"/>
+               <xsl:try>
+                  <xsl:value-of select="unparsed-text($html_file)"/>
+                  <xsl:catch>
+                     <xsl:message>
+                        <xsl:text>ERROR: Page recorded as available but no html file (</xsl:text>
+                        <xsl:value-of select="$html_file"/>
+                        <xsl:text>)</xsl:text>
+                     </xsl:message>
+                  </xsl:catch>
+               </xsl:try>
             </string>
          </map>
          <xsl:choose>
