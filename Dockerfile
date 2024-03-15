@@ -49,7 +49,7 @@ CMD ["sh"]
 
 # To test, run the following commands in terminal
 # 1. Shell in to the image using: 
-# sudo docker run -it --rm cudl-xslt:0.0.3
+# sudo docker run -it --rm cudl-xslt:0.0.5
 # 2. then link sample TEI data directory to the data XSLT data processing directory and build process using ANT:
 # ln -s dl-data-samples/source-data/data/items/data/tei/MS-TEST-ITEM-00001/ data
 # ant -buildfile ./bin/build.xml "json"

@@ -3,18 +3,22 @@ const exec = util.promisify(require('child_process').exec);
 const fs = require('fs/promises');
 const path = require('path');
 
-async function processDataWithDocker(teiDirectory, outputFormat) {
+async function processDataWithDocker(teiDirectory, isSudoDocker) {
+
+    const sudoDockerString = isSudoDocker ? 'sudo docker' : 'docker';
+
+
     try {
         // Create a symbolic link to the data directory
-        const { stdout: linkOutput } = await exec(`sudo docker run --rm cudl-xslt:0.0.4 ln -s ${teiDirectory} data`);
+        const { stdout: linkOutput } = await exec(`ln -s ${teiDirectory} data`);
         console.log('Symbolic link created:', linkOutput.trim());
 
-        // Run the ant build command inside the Docker container
-        const { stdout: antOutput } = await exec(`sudo docker run --rm cudl-xslt:0.0.4 ant -buildfile ./bin/build.xml "${outputFormat}"`);
+        // Run the ant build command inside the Docker container with local volume mount
+        const { stdout: antOutput } = await exec(`${sudoDockerString} run --rm -v ${__dirname}/data:/opt/data -v ${__dirname}/json:/opt/json cudl-xslt:0.0.5 ant -buildfile ./bin/build.xml "json"`);
         console.log('Ant command executed:', antOutput.trim());
 
         // Remove the data directory in the Docker container
-        const { stdout: removeOutput } = await exec('sudo docker run --rm cudl-xslt:0.0.4 rm -r data');
+        const { stdout: removeOutput } = await exec('rm -r data');
         console.log('Data directory removed:', removeOutput.trim());
 
         // Read and parse JSON files
@@ -54,7 +58,7 @@ async function readJsonFiles(filePath) {
 }
 
 // Example usage
-processDataWithDocker('dl-data-samples/source-data/data/items/data/tei/MS-TEST-ITEM-00001/', 'json')
+processDataWithDocker('../dl-data-samples/source-data/data/items/data/tei/MS-TEST-ITEM-00002/', true)
     .then((jsonData) => {
         console.log('JSON data:', jsonData);
     })
