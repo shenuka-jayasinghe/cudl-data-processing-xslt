@@ -34,7 +34,6 @@ RUN wget -q "https://downloads.saxonica.com/SaxonJ/PE/9/SaxonPE$SAXON_VERSION.zi
 # Set up environment variables for Saxon
 ENV SAXON_JAVADOC /opt/Saxon-HE-$SAXON_VERSION-javadoc.jar
 ENV CLASSPATH="/opt/apache-ant/lib/saxon9pe.jar"
-# ENV CLASSPATH="/opt/apache-ant/lib/Saxon-HE-$SAXON_VERSION-javadoc.jar"
 
 # Download and install ant-contrib
 RUN wget -q "https://repo1.maven.org/maven2/ant-contrib/ant-contrib/1.0b3/ant-contrib-1.0b3.jar" -O /opt/apache-ant/lib/ant-contrib-1.0b3.jar
