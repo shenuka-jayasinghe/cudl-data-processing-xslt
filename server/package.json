@@ -1,0 +1,15 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "kafka": "cd kafka-cluster && sudo docker compose up",
+    "start:producer": "node ./producer/tei-test.js",
+    "start:consumer": "node ./consumer/xlst.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
