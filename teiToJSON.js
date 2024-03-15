@@ -14,7 +14,7 @@ async function processDataWithDocker(teiDirectory, isSudoDocker) {
         console.log('Symbolic link created:', linkOutput.trim());
 
         // Run the ant build command inside the Docker container with local volume mount
-        const { stdout: antOutput } = await exec(`${sudoDockerString} run --rm -v ${__dirname}/data:/opt/data -v ${__dirname}/json:/opt/json cudl-xslt:0.0.5 ant -buildfile ./bin/build.xml "json"`);
+        const { stdout: antOutput } = await exec(`${sudoDockerString} run --rm -v ${__dirname}/data:/opt/data -v ${__dirname}/json:/opt/json shenukacj/cudl-xslt:0.0.5 ant -buildfile ./bin/build.xml "json"`);
         console.log('Ant command executed:', antOutput.trim());
 
         // Remove the data directory in the Docker container
