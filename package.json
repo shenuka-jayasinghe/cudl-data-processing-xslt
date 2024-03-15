@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "avsc": "^5.7.7",
+    "node-rdkafka": "^2.18.0"
+  }
+}
